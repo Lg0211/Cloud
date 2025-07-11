@@ -82,6 +82,18 @@ def graphite_ocp(sto):
     )
     return u_eq1
 
+def graphite_ocp1(sto):  #修正过的OCP
+    gamma=-0.01185456
+    U_eq1 = (
+        0.063+0.8*pybamm.exp(-75*(((1-gamma)*sto+gamma)+0.001))
+        -0.012*pybamm.tanh((((1-gamma)*sto+gamma)-0.127)/0.016)
+        -0.0118*pybamm.tanh((((1-gamma)*sto+gamma)-0.155)/0.016)
+        -0.0035*pybamm.tanh((((1-gamma)*sto+gamma)-0.22)/0.02)
+        -0.0095*pybamm.tanh((((1-gamma)*sto+gamma)-0.19)/0.013)
+        -0.0145*pybamm.tanh((((1-gamma)*sto+gamma)-0.49)/0.02)
+        -0.08*pybamm.tanh((((1-gamma)*sto+gamma)-1.03)/0.055)
+        )
+    return U_eq1
 
 #%%负极交换电流密度
 def graphite_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
@@ -97,7 +109,7 @@ def graphite_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
           * (c_e / c_e_ref) ** 0.5
 
           )
-    return i0
+    return i0 * 0.15
 
 
 #%%
@@ -118,6 +130,31 @@ def nmc_ocp(sto):
     )
     return u_eq
 
+def nmc_ocp1(sto):
+    data = pd.read_excel("A:/Code/Cloud/Data/OCP/Postive_OCP.xlsx")
+    sto_data = data["Sto"].to_numpy()
+    OCP_data = data["Voltage"].to_numpy()
+    # 创建插值函数
+    interp = pybamm.Interpolant(sto_data, OCP_data, sto)
+
+def nmc_ocp2(sto):  #change OCP
+    sto_data=np.array([
+   	 0.0e0, 2.610000E-01, 2.776070E-01, 2.942140E-01, 3.108210E-01, 3.274280E-01, 3.440350E-01, 3.606420E-01, 3.772490E-01,
+   	 3.938560E-01, 4.104630E-01, 4.270700E-01, 4.436770E-01, 4.603579E-01, 4.769649E-01, 4.935719E-01, 5.101789E-01, 5.267859E-01,
+   	 5.433929E-01, 5.599999E-01, 5.766069E-01, 5.932139E-01, 6.098209E-01, 6.264279E-01, 6.430349E-01, 6.596419E-01, 6.762489E-01,
+   	 6.928559E-01, 7.094629E-01, 7.260699E-01, 7.426769E-01, 7.592839E-01, 7.758909E-01, 7.924980E-01, 8.091050E-01, 8.257120E-01,
+   	 8.423190E-01, 8.589260E-01, 8.756068E-01, 8.922138E-01, 9.088208E-01, 9.254278E-01, 9.420348E-01, 9.492700E-01, 9.550000E-01,
+   	 9.600000E-01, 9.650000E-01, 9.700000E-01, 9.750000E-01, 9.800000E-01, 9.850000E-01, 9.900000E-01, 9.950000E-01, 1.000000E+00])
+    OCP_data=np.array([
+	 4.800e0, 4.2726E+00, 4.239000E+00, 4.207100E+00, 4.175700E+00, 4.145100E+00, 4.115100E+00, 4.086100E+00, 4.058200E+00,
+	 4.031300E+00, 4.004900E+00, 3.979000E+00, 3.953400E+00, 3.928300E+00, 3.903500E+00, 3.880200E+00, 3.858200E+00, 3.837900E+00,
+	 3.819900E+00, 3.804200E+00, 3.790900E+00, 3.779100E+00, 3.768700E+00, 3.759300E+00, 3.750600E+00, 3.742000E+00, 3.733900E+00,
+	 3.725500E+00, 3.716900E+00, 3.707800E+00, 3.698400E+00, 3.688500E+00, 3.678200E+00, 3.667500E+00, 3.656600E+00, 3.645600E+00,
+	 3.634400E+00, 3.623100E+00, 3.611100E+00, 3.598000E+00, 3.582800E+00, 3.564100E+00, 3.539200E+00, 3.526200E+00, 3.504580E+00,
+	 3.483240E+00, 3.456450E+00, 3.423070E+00, 3.381810E+00, 3.331230E+00, 3.269720E+00, 3.195510E+00, 3.106680E+00, 3.001080E+00])
+    cs = pybamm.Interpolant(sto_data, OCP_data,sto)
+    return cs
+
 
 #%%正极交换电流密度
 
@@ -135,7 +172,7 @@ def nmc_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
             * (c_e / c_e_ref) ** 0.5
 
             ) * 0.99
-    return i0_p
+    return i0_p *5
 
 
 #%%
@@ -144,11 +181,9 @@ def electrolyte_diffusivity(c_e, T): #155
     def DL_int(x):
         y = 3.55476e-10 + 2.4037e-13 * x - 2.23266e-16 * (x ** 2) + 3.11389e-20 * (x ** 3)
         return y
-
     T_ref = 298.15
     D_c_e = DL_int(c_e) * np.exp(16500 / 8.314 * (1 / T_ref - 1 / T))
     return D_c_e
-
 
 def electrolyte_conductivity(c_e, T):
     T_ref = 298.15
@@ -171,7 +206,7 @@ def NMC_electrode_diffusivity(sto, T):
 def graphite_electrode_diffusivity(sto, T):
     R = 8.314472 #-13 -14
     D_s_n = 1.15 * 0.21e-14 * np.exp(12e4 / R * (1 / 298.15 - 1 / T)) * (1.5 - sto) ** 1.5 * 1.2
-    return D_s_n * 0.999
+    return D_s_n * 0.999 * 10
 
 
 def Cation_transference_number(c_s, T):
@@ -198,7 +233,6 @@ def Negative_electrode_OCP(sto):
 
 
 def Positive_electrode_OCP(sto):
-    #print(sto.to_equation())
 
     docpdt = (((0.4 - sto) * 0.2e-3) * (sto <= 0.4)
               + ((-3.0 * (sto - 0.4)) * 0.2e-3) * (sto > 0.4) * (sto <= 0.5)
@@ -228,10 +262,10 @@ def get_parameter_values():
         "Negative electrode conductivity [S.m-1]": 100.0,  #622
         "Maximum concentration in negative electrode [mol.m-3]": 31252.0,  #622
         "Negative electrode diffusivity [m2.s-1]": graphite_electrode_diffusivity,#622
-        "Negative electrode OCP [V]": graphite_ocp,#622
+        "Negative electrode OCP [V]": graphite_ocp,#Yang
         "Negative electrode porosity": 0.32608,  #622
         "Negative electrode active material volume fraction": 0.64392, #0.97 - Negative electrode porosity
-        "Negative particle radius [m]": 6e-06,  #622      负极粒子半径6，直径10
+        "Negative particle radius [m]": 5e-06,  #622      负极粒子半径6，直径10
         "Negative electrode Bruggeman coefficient (electrolyte)": 2.5, #622
         "Negative electrode Bruggeman coefficient (electrode)": 0,
         "Negative electrode exchange-current density [A.m-2]"
@@ -239,12 +273,12 @@ def get_parameter_values():
         "Negative electrode OCP entropic change [V.K-1]": Negative_electrode_OCP, #622
         # positive electrode
         "Positive electrode conductivity [S.m-1]": 10,  #622
-        "Maximum concentration in positive electrode [mol.m-3]": 48158.0,  #622
+        "Maximum concentration in positive electrode [mol.m-3]":49520.78,  #622
         "Positive electrode diffusivity [m2.s-1]": NMC_electrode_diffusivity, #622
-        "Positive electrode OCP [V]": nmc_ocp,
-        "Positive electrode porosity": 0.27666,  #正极孔隙率0.27666 0.25-0.35
-        "Positive electrode active material volume fraction": 0.67334, #0.95 - "Positive electrode porosity"
-        "Positive particle radius [m]": 3e-06, #622
+        "Positive electrode OCP [V]": nmc_ocp2,
+        "Positive electrode porosity": 0.32,  #Yang
+        "Positive electrode active material volume fraction": 0.65, #0.95 - "Positive electrode porosity"
+        "Positive particle radius [m]": 5e-06, #Yang
         "Positive electrode Bruggeman coefficient (electrolyte)": 2.15, #1.5-2.5
         "Positive electrode Bruggeman coefficient (electrode)": 0,
         "Positive electrode exchange-current density [A.m-2]"
@@ -266,13 +300,13 @@ def get_parameter_values():
         "Number of cells connected in series to make a battery": 1.0,#measure
         "Lower voltage cut-off [V]": 2.5,
         "Upper voltage cut-off [V]": 4.2,
-        "Open-circuit voltage at 0% SOC [V]": 2.9119,#measure
-        "Open-circuit voltage at 100% SOC [V]": 4.18,#measure
-        "Initial concentration in negative electrode [mol.m-3]": 26182.0,#note
-        "Initial concentration in positive electrode [mol.m-3]": 15715.0,#note
+        "Open-circuit voltage at 0% SOC [V]": 2.8,#measure
+        "Open-circuit voltage at 100% SOC [V]": 4.18,#measure 4.18
+        "Initial concentration in negative electrode [mol.m-3]": 31252.0 * (0.01462867 - 0.008 ) ,#note  31252.0 * 0.69000747  0.01422177   31252.0 * 0.8250747
+        "Initial concentration in positive electrode [mol.m-3]": 49520.78 * 0.89252436,#note 36360 * 0.27824213   0.85907807
         "Initial temperature [K]": 298.15,  #%%
         #themal
-        "Total heat transfer coefficient [W.m-2.K-1]": 50,  #note 待修正
+        "Total heat transfer coefficient [W.m-2.K-1]": 10,  #note 待修正
         "Negative current collector conductivity [S.m-1]": 58411000.0,
         "Positive current collector conductivity [S.m-1]": 36914000.0,
         "Cell volume [m3]": 3.487E-4, #规格书计算结果
@@ -281,8 +315,8 @@ def get_parameter_values():
         "Positive current collector density [kg.m-3]": 2124.5, #measure
         "Negative current collector specific heat capacity [J.kg-1.K-1]": 1100.0, #EVE
         "Positive current collector specific heat capacity [J.kg-1.K-1]": 1100.0, #EVE
-        "Negative electrode density [kg.m-3]": 2124.5,  #measure
-        "Positive electrode density [kg.m-3]": 2124.5,   #measure
+        "Negative electrode density [kg.m-3]": 2.24e3,  #measure
+        "Positive electrode density [kg.m-3]": 4.8e3,   #measure
         "Negative electrode specific heat capacity [J.kg-1.K-1]": 1100, #EVE
         "Positive electrode specific heat capacity [J.kg-1.K-1]": 1100, #EVE
         "Separator density [kg.m-3]": 2124.5, #measure
