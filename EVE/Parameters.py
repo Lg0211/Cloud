@@ -152,8 +152,11 @@ def nmc_ocp1(sto):
     OCP_data = data["Voltage"].to_numpy()
     # 创建插值函数
     interp = pybamm.Interpolant(sto_data, OCP_data, sto)
+    return interp
 
 def nmc_ocp2(sto):  #change OCP
+    data  = pd.read_excel("A:/Code/Cloud/Data/OCP/Postive_OCP_yang_3.xlsx")
+    """
     sto_data=np.array([
    	 0.0e0, 2.610000E-01, 2.776070E-01, 2.942140E-01, 3.108210E-01, 3.274280E-01, 3.440350E-01, 3.606420E-01, 3.772490E-01,
    	 3.938560E-01, 4.104630E-01, 4.270700E-01, 4.436770E-01, 4.603579E-01, 4.769649E-01, 4.935719E-01, 5.101789E-01, 5.267859E-01,
@@ -168,6 +171,9 @@ def nmc_ocp2(sto):  #change OCP
 	 3.725500E+00, 3.716900E+00, 3.707800E+00, 3.698400E+00, 3.688500E+00, 3.678200E+00, 3.667500E+00, 3.656600E+00, 3.645600E+00,
 	 3.634400E+00, 3.623100E+00, 3.611100E+00, 3.598000E+00, 3.582800E+00, 3.564100E+00, 3.539200E+00, 3.526200E+00, 3.504580E+00,
 	 3.483240E+00, 3.456450E+00, 3.423070E+00, 3.381810E+00, 3.331230E+00, 3.269720E+00, 3.195510E+00, 3.106680E+00, 3.001080E+00])
+	 """
+    sto_data = data["Sto"].to_numpy()
+    OCP_data = data["Voltage"].to_numpy()
     cs = pybamm.Interpolant(sto_data, OCP_data,sto)
     return cs
 
