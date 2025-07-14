@@ -128,7 +128,7 @@ for index in list0:
         voltage = solutions[index]["Battery voltage [V]"].data
         dcap1 = np.abs(Data[index]["Capacity [A.h]"])
         voltage1 = Data[index]["Terminal voltage [V]"]
-
+    """
     #绘制极化
     ncm_concent = solutions[index]['Average positive particle concentration [mol.m-3]'].data
     ncm_ocp = P_ocp(ncm_concent/parameter_values["Maximum concentration in positive electrode [mol.m-3]"])
@@ -144,9 +144,9 @@ for index in list0:
     c_surf_neg = solutions["0.33C_CHG"]["Negative particle surface concentration [mol.m-3]"].data[0, :].reshape(-1, 1)
     ocp_neg = graphite_ocp(c_surf_neg / parameter_values["Maximum concentration in negative electrode [mol.m-3]"])
     plt.plot(dcap, ocp_neg, linewidth=1.8, label='N_ocp', color="gray")
-
+    
     plt.plot(dcap, ocp_pos-ocp_neg, linewidth=1.8, label='P-N', color="green")
-
+    """
 
     #RMSE计算
     voltage_interp = np.array([])
@@ -171,7 +171,7 @@ for index in list0:
 # 在曲线图上添加 RMSE 文本，取位置为放电容量中段
 mid_idx = len(interp) // 2
 plt.text(interp[mid_idx], voltage1_interp[mid_idx] + 0.38,  # Y值可上下微调
-         f"RMSE: {rmse:.1f} mV",
+         f"RMSE: {rmse:.3f} mV",
          fontsize=18, color='gray')
 data_OCV = pd.read_excel(r"A:\Code\Cloud\Data\OCV\OCV.xlsx")
 SOC = data_OCV['SOC']

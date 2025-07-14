@@ -82,6 +82,22 @@ def graphite_ocp(sto):
     )
     return u_eq1
 
+def graphite_ocp_smoothed(sto):
+    """平滑过渡的石墨电极开路电位函数"""
+    # 原始OCP计算部分
+    u_eq1 = graphite_ocp(sto)
+    # 平滑过渡参数
+    transition_start = 0.6
+    transition_width = 0.05
+    # 计算sigmoid权重因子
+    weight = 1 / (1 + np.exp((sto - transition_start) / transition_width))
+    # 计算在0.6处的值作为目标值
+    target_value = graphite_ocp(transition_start)
+    # 混合原始值和目标值
+    return weight * u_eq1 + (1 - weight) * target_value
+
+
+
 def graphite_ocp1(sto):  #修正过的OCP
     gamma=-0.01185456
     U_eq1 = (
@@ -109,7 +125,7 @@ def graphite_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
           * (c_e / c_e_ref) ** 0.5
 
           )
-    return i0 * 0.15
+    return i0 * 0.1
 
 
 #%%
@@ -172,7 +188,7 @@ def nmc_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
             * (c_e / c_e_ref) ** 0.5
 
             ) * 0.99
-    return i0_p *5
+    return i0_p * 0.5
 
 
 #%%
@@ -200,7 +216,7 @@ def NMC_electrode_diffusivity(sto, T):
     D_s_p_ref = 3.5e-15* 5 #-14 - -15
     R = 8.314472
     D_s_p = D_s_p_ref * np.exp(12e4 / R * (1 / 298.15 - 1 / T))
-    return D_s_p * 0.99999
+    return D_s_p * 0.99999 *5
 
 
 def graphite_electrode_diffusivity(sto, T):
@@ -262,7 +278,7 @@ def get_parameter_values():
         "Negative electrode conductivity [S.m-1]": 100.0,  #622
         "Maximum concentration in negative electrode [mol.m-3]": 31252.0,  #622
         "Negative electrode diffusivity [m2.s-1]": graphite_electrode_diffusivity,#622
-        "Negative electrode OCP [V]": graphite_ocp,#Yang
+        "Negative electrode OCP [V]": graphite_ocp_smoothed,#Yang
         "Negative electrode porosity": 0.32608,  #622
         "Negative electrode active material volume fraction": 0.64392, #0.97 - Negative electrode porosity
         "Negative particle radius [m]": 5e-06,  #622      负极粒子半径6，直径10
@@ -302,8 +318,8 @@ def get_parameter_values():
         "Upper voltage cut-off [V]": 4.2,
         "Open-circuit voltage at 0% SOC [V]": 2.8,#measure
         "Open-circuit voltage at 100% SOC [V]": 4.18,#measure 4.18
-        "Initial concentration in negative electrode [mol.m-3]": 31252.0 * (0.01462867 - 0.008 ) ,#note  31252.0 * 0.69000747  0.01422177   31252.0 * 0.8250747
-        "Initial concentration in positive electrode [mol.m-3]": 49520.78 * 0.89252436,#note 36360 * 0.27824213   0.85907807
+        "Initial concentration in negative electrode [mol.m-3]": 31252.0 * (0.01462867 - 0.01 ) ,#note  31252.0 * 0.69000747  0.01422177   31252.0 * 0.8250747
+        "Initial concentration in positive electrode [mol.m-3]": 49520.78 * (0.89252436 + 0.019),#note 36360 * 0.27824213   0.85907807
         "Initial temperature [K]": 298.15,  #%%
         #themal
         "Total heat transfer coefficient [W.m-2.K-1]": 10,  #note 待修正
