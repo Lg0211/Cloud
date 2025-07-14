@@ -7,8 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
-import time
-start_time = time.time()
 #2025.7.14
 current_time = datetime.now().strftime("%Y%m%d-%H%M")
 #%%
@@ -78,8 +76,6 @@ Data = {
     "0.33C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_DCHG"),
     "1C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1C_DCHG"),
     "0.33C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_CHG"),
-    "0.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.5C_CHG"),
-    "1C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx", sheet_name="1C_CHG"),
 }
 
 model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
@@ -89,7 +85,7 @@ model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
                                           })
 
 parameter_values = pybamm.ParameterValues(Parameters.get_parameter_values())
-list0 = ["0.33C_CHG","0.5C_CHG","1C_CHG"]
+list0 = ["0.33C_CHG"]
 solutions = {}
 
 for index in list0:
@@ -196,5 +192,3 @@ plt.tick_params(axis='y', labelsize=20)
 picture_path = "A:/Code/Cloud/Data/Cycle_0/solution"
 plt.savefig(os.path.join(picture_path,f"{current_time}_Cap_V.png"), dpi=300, bbox_inches='tight')
 #1
-end_time = time.time()
-print(end_time - start_time)
