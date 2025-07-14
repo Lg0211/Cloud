@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import CubicSpline
 
-x_dUdT_MCMB_3 = np.array([
+x_dUdT_MCMB_3 = np.array([0,
     0.000454907, 0.00136472, 0.00181963, 0.00238826, 0.00318435, 0.00386671,
     0.00432162, 0.0046628, 0.00511771, 0.00568634, 0.00625498, 0.00659616,
     0.00682361, 0.00727852, 0.00796088, 0.00841579, 0.00875697, 0.0093256,
@@ -38,9 +38,9 @@ x_dUdT_MCMB_3 = np.array([
     0.754123, 0.762311, 0.770499, 0.778574, 0.786648, 0.794837, 0.802911,
     0.810986, 0.819174, 0.827249, 0.83521, 0.843171, 0.85079, 0.857955, 0.865006,
     0.872057, 0.878995, 0.885818, 0.892073, 0.897532, 0.902309, 0.906517,
-    0.910497, 0.914477, 0.91823, 0.921642, 0.924372, 0.926305, 0.929376
+    0.910497, 0.914477, 0.91823, 0.921642, 0.924372, 0.926305, 0.929376,1
 ])
-y_dUdT_MCMB_3 = np.array([61.4112, 60.5429, 59.6746, 58.8183, 57.9621, 57.0937, 56.2375, 55.3691,
+y_dUdT_MCMB_3 = np.array([62,61.4112, 60.5429, 59.6746, 58.8183, 57.9621, 57.0937, 56.2375, 55.3691,
                           54.5008, 53.6325, 52.7641, 51.8958, 51.0274, 50.1712, 49.3028, 48.4466,
                           47.5782, 46.7099, 45.8416, 44.9854, 44.1293, 43.2852, 42.4291, 41.5729,
                           40.741, 39.9453, 39.1496, 38.3176, 37.4615, 36.5932, 35.7249, 34.8566,
@@ -66,9 +66,18 @@ y_dUdT_MCMB_3 = np.array([61.4112, 60.5429, 59.6746, 58.8183, 57.9621, 57.0937, 
                           -6.46934, -6.55288, -6.67261, -6.76822, -6.81558, -6.85088, -6.91031,
                           -6.99385, -7.1377, -7.31775, -7.53398, -7.83468, -8.21985, -8.65328,
                           -9.09877, -9.56839, -10.0742, -10.6283, -11.267, -11.966, -12.7012,
-                          -13.4486, -14.208, -14.9795, -15.7631, -16.5829, -17.4511, -18.2227
+                          -13.4486, -14.208, -14.9795, -15.7631, -16.5829, -17.4511, -18.2227,-21.2227
                           ])
 
+df = pd.DataFrame({
+    'Stoichiometry': x_dUdT_MCMB_3 ,
+    'Open_Circuit_Potential': y_dUdT_MCMB_3
+})
+# 保存到Excel文件
+output_file = 'graphite_ocp_data.xlsx'
+df.to_excel(output_file, index=False, sheet_name='OCP Data')
+
+print(f"数据已成功保存到 {output_file}")
 
 #%%
 def graphite_ocp(sto):
@@ -173,11 +182,11 @@ def nmc_ocp2(sto):  #change OCP
     data = pd.read_excel("A:/Code/Cloud/Data/OCP/Postive_OCP_yang_3.xlsx")
     sto_data = data["Sto"].to_numpy()
     OCP_data = data["Voltage"].to_numpy()
-    cs = pybamm.Interpolant(sto_data, OCP_data,sto)
+    cs = pybamm.Interpolant(sto_data, OCP_data,sto,interpolator = "cubic" )
     return cs
 
 
-#%%正极交换电流密度
+""#%%正极交换电流密度
 
 def nmc_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
     i0_ref_p = 1.5
@@ -243,13 +252,13 @@ def Cation_transference_number(c_s, T):
 #%% #note 待修改
 def Negative_electrode_OCP(sto):
     #print(type(sto))
-    data = pd.read_excel("A:/Code/ACES/Pybamm/DFN/dOCPdT/N_dOCPdT.xlsx")
+    #data = pd.read_excel("A:/Code/ACES/Pybamm/DFN/dOCPdT/N_dOCPdT.xlsx")
     sto_data = data["化学计量数"].to_numpy()
     OCP_entropic_change_data = data["dOCPdT"].to_numpy()
     sto_data1 = x_dUdT_MCMB_3
     OCP_entropic_change_data1 = y_dUdT_MCMB_3 / 96485.33212
     # 创建插值函数
-    interp = pybamm.Interpolant(sto_data1, OCP_entropic_change_data1, sto)
+    interp = pybamm.Interpolant(sto_data1, OCP_entropic_change_data1, sto,interpolator="cubic",extrapolate = True)
     return interp
 
 

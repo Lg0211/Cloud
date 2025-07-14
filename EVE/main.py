@@ -7,77 +7,29 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
+import time
 #2025.7.14
 current_time = datetime.now().strftime("%Y%m%d-%H%M")
-#%%
-def P_ocp(sto):
-    sto_data = np.array([
-        0.0e0, 2.610000E-01, 2.776070E-01, 2.942140E-01, 3.108210E-01, 3.274280E-01, 3.440350E-01, 3.606420E-01,
-        3.772490E-01,
-        3.938560E-01, 4.104630E-01, 4.270700E-01, 4.436770E-01, 4.603579E-01, 4.769649E-01, 4.935719E-01, 5.101789E-01,
-        5.267859E-01,
-        5.433929E-01, 5.599999E-01, 5.766069E-01, 5.932139E-01, 6.098209E-01, 6.264279E-01, 6.430349E-01, 6.596419E-01,
-        6.762489E-01,
-        6.928559E-01, 7.094629E-01, 7.260699E-01, 7.426769E-01, 7.592839E-01, 7.758909E-01, 7.924980E-01, 8.091050E-01,
-        8.257120E-01,
-        8.423190E-01, 8.589260E-01, 8.756068E-01, 8.922138E-01, 9.088208E-01, 9.254278E-01, 9.420348E-01, 9.492700E-01,
-        9.550000E-01,
-        9.600000E-01, 9.650000E-01, 9.700000E-01, 9.750000E-01, 9.800000E-01, 9.850000E-01, 9.900000E-01, 9.950000E-01,
-        1.000000E+00])
-
-    OCP_data = np.array([
-        4.800e0, 4.2726E+00, 4.239000E+00, 4.207100E+00, 4.175700E+00, 4.145100E+00, 4.115100E+00, 4.086100E+00,
-        4.058200E+00,
-        4.031300E+00, 4.004900E+00, 3.979000E+00, 3.953400E+00, 3.928300E+00, 3.903500E+00, 3.880200E+00, 3.858200E+00,
-        3.837900E+00,
-        3.819900E+00, 3.804200E+00, 3.790900E+00, 3.779100E+00, 3.768700E+00, 3.759300E+00, 3.750600E+00, 3.742000E+00,
-        3.733900E+00,
-        3.725500E+00, 3.716900E+00, 3.707800E+00, 3.698400E+00, 3.688500E+00, 3.678200E+00, 3.667500E+00, 3.656600E+00,
-        3.645600E+00,
-        3.634400E+00, 3.623100E+00, 3.611100E+00, 3.598000E+00, 3.582800E+00, 3.564100E+00, 3.539200E+00, 3.526200E+00,
-        3.504580E+00,
-        3.483240E+00, 3.456450E+00, 3.423070E+00, 3.381810E+00, 3.331230E+00, 3.269720E+00, 3.195510E+00, 3.106680E+00,
-        3.001080E+00])
-
-    sto = np.clip(sto, sto_data[0], sto_data[-1])  # 防止超出插值范围
-    ocp = np.interp(sto, sto_data, OCP_data)
-    return ocp
-
-"""
-def graphite_ocp(sto):  # 修正过的OCP mohatat
-    sto = np.array(sto)  # 确保是 NumPy 数组，支持批量计算
-    gamma = -0.01185456
-    U_eq1 = (
-            0.063 + 0.8 * np.exp(-75 * (((1 - gamma) * sto + gamma) + 0.001))
-            - 0.012 * np.tanh((((1 - gamma) * sto + gamma) - 0.127) / 0.016)
-            - 0.0118 * np.tanh((((1 - gamma) * sto + gamma) - 0.155) / 0.016)
-            - 0.0035 * np.tanh((((1 - gamma) * sto + gamma) - 0.22) / 0.02)
-            - 0.0095 * np.tanh((((1 - gamma) * sto + gamma) - 0.19) / 0.013)
-            - 0.0145 * np.tanh((((1 - gamma) * sto + gamma) - 0.49) / 0.02)
-            - 0.08 * np.tanh((((1 - gamma) * sto + gamma) - 1.03) / 0.055)
-    )
-    return U_eq1
-"""
-def graphite_ocp(sto):
-    sto = np.array(sto)
-    u_eq1 = (
-            0.16576
-            + 0.84157 * np.exp(-61.25108 * sto)
-            + 0.39197 * np.exp(-500.38943 * sto)
-            - np.exp(2.81471 * sto - 4.91298)
-            - 0.02689 * np.arctan(25.59 * sto - 4.099)
-            - 0.00717 * np.arctan(32.49 * sto - 15.74)
-    )
-    return u_eq1
-#%%
-C_rate = 1
+start_time = time.time()
 #%%
 Data = {
     "0.33C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_DCHG"),
     "1C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1C_DCHG"),
     "0.33C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_CHG"),
+    "0.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.5C_CHG"),
+    "1C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1C_CHG"),
+    "1.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1.5C_CHG"),
+    "2C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="2C_CHG"),
 }
-
+list = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG","2C_CHG"]
+time_stop = [12000 , 8000 , 3800 , 2600 , 2000]
+time_num = [1200 ,  800, 380 , 260 , 200 ]
+dict = {
+    item: {"time_stop": stop, "time_num": num}
+    for item, stop, num in zip(list, time_stop, time_num)
+}
+list_opm  = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG"]
+#%%
 model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
                                           "SEI": "constant",  # 使用恒定SEI层厚度
                                           "SEI film resistance": "average",  # 启用SEI膜电阻
@@ -85,15 +37,14 @@ model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
                                           })
 
 parameter_values = pybamm.ParameterValues(Parameters.get_parameter_values())
-list0 = ["0.33C_CHG"]
+
 solutions = {}
 
-for index in list0:
+for index in list_opm:
     parameter_values["Current function [A]"] =  - Data[index]["Current [A]"][0] #Data[index]["Current [A]"][0]
     solver = pybamm.CasadiSolver(mode="safe", atol=1e-6, rtol=1e-3)
     sim = pybamm.Simulation(model, parameter_values=parameter_values, solver=solver)
-    t_eval = np.linspace(0, 12000, 1200)
-
+    t_eval = np.linspace(0, dict[index]["time_stop"], dict[index]["time_num"])
 
     def callback(sol):
         print(f"当前时间: {sol.t[-1]}, 最大插值使用: {sol.all_interpolants_used}")
@@ -118,7 +69,7 @@ colors = {
     "hppc_charge":red
     }
 plt.figure(figsize=(10, 8), dpi=100)
-for index in list0:
+for index in list_opm:
     if "hppc" in index:
         dcap = solutions[index]["Time [s]"].entries
         voltage = solutions[index]["Terminal voltage [V]"].entries
@@ -129,25 +80,6 @@ for index in list0:
         voltage = solutions[index]["Battery voltage [V]"].data
         dcap1 = np.abs(Data[index]["Capacity [A.h]"])
         voltage1 = Data[index]["Terminal voltage [V]"]
-    """
-    #绘制极化
-    ncm_concent = solutions[index]['Average positive particle concentration [mol.m-3]'].data
-    ncm_ocp = P_ocp(ncm_concent/parameter_values["Maximum concentration in positive electrode [mol.m-3]"])
-    gr_concent = solutions[index]['Average negative particle concentration [mol.m-3]'].data
-    gr_ocp = graphite_ocp(gr_concent /parameter_values["Maximum concentration in negative electrode [mol.m-3]"])
-    plt.plot(dcap, ncm_ocp, linewidth=1.8, label='P_ocp_average', color=black)
-    plt.plot(dcap, gr_ocp, linewidth=1.8, label='N_ocp_average', color=black)
-
-    #取表面最大化学计量数，靠近集流体
-    c_surf_pos = solutions["0.33C_CHG"]["Positive particle surface concentration [mol.m-3]"].data[0,:].reshape(-1,1)
-    ocp_pos =  P_ocp(c_surf_pos/parameter_values["Maximum concentration in positive electrode [mol.m-3]"])
-    plt.plot(dcap, ocp_pos, linewidth=1.8, label='P_ocp', color="gray")
-    c_surf_neg = solutions["0.33C_CHG"]["Negative particle surface concentration [mol.m-3]"].data[0, :].reshape(-1, 1)
-    ocp_neg = graphite_ocp(c_surf_neg / parameter_values["Maximum concentration in negative electrode [mol.m-3]"])
-    plt.plot(dcap, ocp_neg, linewidth=1.8, label='N_ocp', color="gray")
-    
-    plt.plot(dcap, ocp_pos-ocp_neg, linewidth=1.8, label='P-N', color="green")
-    """
 
     #RMSE计算
     voltage_interp = np.array([])
@@ -192,3 +124,5 @@ plt.tick_params(axis='y', labelsize=20)
 picture_path = "A:/Code/Cloud/Data/Cycle_0/solution"
 plt.savefig(os.path.join(picture_path,f"{current_time}_Cap_V.png"), dpi=300, bbox_inches='tight')
 #1
+end_time = time.time()
+print(f"Time cost: {end_time - start_time}")
