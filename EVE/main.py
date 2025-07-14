@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
+#2025.7.14
 current_time = datetime.now().strftime("%Y%m%d-%H%M")
 #%%
 def P_ocp(sto):
