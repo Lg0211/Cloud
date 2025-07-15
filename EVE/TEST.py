@@ -112,3 +112,15 @@ df.to_excel(output_file, index=False, sheet_name='OCP Data')
 print(f"数据已成功保存到 {output_file}")
 plt.plot(sto_data, OCP_data)
 plt.show()
+#%%
+import pandas as pd
+from scipy.interpolate import CubicSpline
+import matplotlib.pyplot as plt
+data = pd.read_excel(r"A:\Code\Cloud\Data\dOCPdV\graphite_docp_data.xlsx")
+sto = data["Stoichiometry"].to_numpy()
+Voltage = data["Open_Circuit_Potential"].to_numpy()
+cs = CubicSpline(sto,Voltage, extrapolate=True)
+#0 60.62939876363249
+#1 5339.241501217437
+
+

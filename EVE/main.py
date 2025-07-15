@@ -9,6 +9,8 @@ from datetime import datetime
 import os
 import time
 #2025.7.14
+
+#todo
 current_time = datetime.now().strftime("%Y%m%d-%H%M")
 start_time = time.time()
 #%%
@@ -29,6 +31,7 @@ dict = {
     for item, stop, num in zip(list, time_stop, time_num)
 }
 list_opm  = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG"]
+
 #%%
 model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
                                           "SEI": "constant",  # 使用恒定SEI层厚度
@@ -50,25 +53,23 @@ for index in list_opm:
         print(f"当前时间: {sol.t[-1]}, 最大插值使用: {sol.all_interpolants_used}")
         return False  # 不终止求解
 
-
     solution = sim.solve(t_eval, callbacks=[callback])
     #solution = sim.solve(t_eval,initial_soc=0.7)
     solutions[index] = solution
 
 #%%
-blue = (0, 0, 255)
-black = (0, 0, 0)
-red = (219, 0, 0)
-black = tuple([x / 255.0 for x in black])
-red = tuple([x / 255.0 for x in red])
-blue = tuple([x / 255.0 for x in blue])
-colors = {
-    "0.3C_charge": red,
-    "0.3C_discharge": blue,
-    "3C_charge": black,
-    "hppc_charge":red
-    }
+colors = [
+    (49/255.0, 18/255.0, 58/255.0),
+    (68/255.0, 145/255.0, 254/255.0),
+    (190/255.0, 32/255.0, 2/255.0),
+    (253/255.0, 146/255.0, 42/255.0) ,
+    (32/255.0, 199/255.0, 224/255.0),
+]
+
 plt.figure(figsize=(10, 8), dpi=100)
+ax = plt.gca()  # 获取当前坐标轴
+text_y_positions = []
+i = 0
 for index in list_opm:
     if "hppc" in index:
         dcap = solutions[index]["Time [s]"].entries
@@ -80,7 +81,6 @@ for index in list_opm:
         voltage = solutions[index]["Battery voltage [V]"].data
         dcap1 = np.abs(Data[index]["Capacity [A.h]"])
         voltage1 = Data[index]["Terminal voltage [V]"]
-
     #RMSE计算
     voltage_interp = np.array([])
     voltage1_interp = np.array([])
@@ -93,30 +93,50 @@ for index in list_opm:
     label0 = index + "_PyBaMM"
     label1 = index + "_real"
     dcap = dcap
-    plt.plot(dcap, voltage, linewidth=1.8, label=label0, color=red)
+    plt.plot(dcap, voltage, linewidth=1.8, label=label0, color=colors[i])
     indices = range(0, len(dcap1))  # 每隔10个点的索引
     dcap1 = dcap1
-    plt.scatter(dcap1[::50], voltage1[::50],label=label1, color=blue, s=20)
-    #
-
-    #plt.scatter(dcap1[indices], voltage1[indices], color=colors[index], marker='s', label=label1,s=3)
-
-# 在曲线图上添加 RMSE 文本，取位置为放电容量中段
-mid_idx = len(interp) // 2
-plt.text(interp[mid_idx], voltage1_interp[mid_idx] + 0.38,  # Y值可上下微调
-         f"RMSE: {rmse:.3f} mV",
-         fontsize=18, color='gray')
-data_OCV = pd.read_excel(r"A:\Code\Cloud\Data\OCV\OCV.xlsx")
-SOC = data_OCV['SOC']
-OCV = data_OCV["Voltage"]
-plt.scatter(SOC, OCV,label='OCV', color="red")
-#plt.plot(dcap1, voltage1, marker='s' ,label=labels[1],color=colors[0])`
+    plt.scatter(dcap1[::50], voltage1[::50],label=label1, color=colors[i], s=20)
+    # 在右侧显示RMSE
+    # 获取当前y轴范围
+    ymin, ymax = ax.get_ylim()
+    # 计算文本的y位置（均匀分布）
+    text_y_pos = ymax - (ymax - ymin) * 0.07 * (list_opm.index(index) + 1)
+    text_y_positions.append(text_y_pos)
+    # 在右侧添加RMSE文本
+    plt.text(ax.get_xlim()[1] * 1.02,  # x坐标：稍微超出右边界
+             text_y_pos,
+             f"{index} RMSE: {rmse:.3f} mV",
+             fontdict={'family': 'Times New Roman', 'size': 16},
+             color='black',
+             verticalalignment='center')
+    i = i+1
 plt.tick_params(axis="both", which="major", direction="in", width=1.5, length=5)  #设置主副刻度大小
 plt.tick_params(axis="both", which="minor", direction="in", width=1.5, length=3)
 plt.minorticks_on()  #显示副标题
-#plt.gca().xaxis.set_minor_locator(MultipleLocator(.25))  #x轴主副刻度间距
-#plt.gca().xaxis.set_major_locator(MultipleLocator(.5))
-plt.legend(fontsize=14, frameon=False, prop={'family': 'Times New Roman', 'size': 16})
+
+
+#添加图例
+if text_y_positions:
+    lowest_text_y = min(text_y_positions)
+    legend_y = lowest_text_y - (ymax - ymin) * 0.1  # 再往下偏移 10% 的 y 轴范围
+else:
+    legend_y = ymin  # 如果没有 RMSE 文本，默认放在底部
+# 计算 legend_y 在轴坐标中的位置（0~1）
+_, legend_display_y = ax.transData.transform((0, legend_y))  # 获取显示坐标
+_, ymin_display = ax.transData.transform((0, ymin))
+_, ymax_display = ax.transData.transform((0, ymax))
+legend_axis_y = (legend_display_y - ymin_display) / (ymax_display - ymin_display)  # 归一化
+# 添加图例（使用轴坐标）
+plt.legend(
+    fontsize=14,
+    frameon=False,
+    prop={'family': 'Times New Roman', 'size': 16},
+    bbox_to_anchor=(1.02, legend_axis_y),  # y 现在是 0~1 的轴坐标
+    loc='upper left'
+)
+#plt.legend(fontsize=14, frameon=False, prop={'family': 'Times New Roman', 'size': 16},bbox_to_anchor=(1.02, legend_y),loc='upper left')
+#
 plt.xlabel("Discharge Capacity [A.h]", fontsize=24, fontproperties="Times New Roman")
 plt.ylabel("Cell Voltage [V]", fontsize=24, fontproperties="Times New Roman")
 plt.tick_params(axis='x', labelsize=20)
@@ -125,4 +145,4 @@ picture_path = "A:/Code/Cloud/Data/Cycle_0/solution"
 plt.savefig(os.path.join(picture_path,f"{current_time}_Cap_V.png"), dpi=300, bbox_inches='tight')
 #1
 end_time = time.time()
-print(f"Time cost: {end_time - start_time}")
+print(f"Time cost: {end_time - start_time}s")
