@@ -105,13 +105,7 @@ df = pd.DataFrame({
     'Open_Circuit_Potential': OCP_data
 })
 
-# 保存到Excel文件
-output_file = 'OCP_pos.xlsx'
-df.to_excel(output_file, index=False, sheet_name='OCP Data')
 
-print(f"数据已成功保存到 {output_file}")
-plt.plot(sto_data, OCP_data)
-plt.show()
 #%%
 import pandas as pd
 from scipy.interpolate import CubicSpline
