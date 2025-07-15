@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 import time
+import matplotlib.gridspec as gridspec
 #2025.7.14
 
 #todo
@@ -16,21 +17,23 @@ start_time = time.time()
 #%%
 Data = {
     "0.33C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_DCHG"),
+    "0.5C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.5C_DCHG"),
     "1C_DCHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1C_DCHG"),
+
     "0.33C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_CHG"),
     "0.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.5C_CHG"),
     "1C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1C_CHG"),
     "1.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1.5C_CHG"),
     "2C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="2C_CHG"),
 }
-list = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG","2C_CHG"]
-time_stop = [12000 , 8000 , 3800 , 2600 , 2000]
-time_num = [1200 ,  800, 380 , 260 , 200 ]
+list = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG","2C_CHG","0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
+time_stop = [12000 , 8000 , 3800 , 2600 , 2000, 12000, 8000, 3800]
+time_num = [1200 ,  800, 380 , 260 , 200, 1200, 800 , 380]
 dict = {
     item: {"time_stop": stop, "time_num": num}
     for item, stop, num in zip(list, time_stop, time_num)
 }
-list_opm  = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG"]
+list_opm  = ["0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
 
 #%%
 model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
@@ -53,7 +56,7 @@ for index in list_opm:
         print(f"当前时间: {sol.t[-1]}, 最大插值使用: {sol.all_interpolants_used}")
         return False  # 不终止求解
 
-    solution = sim.solve(t_eval, callbacks=[callback])
+    solution = sim.solve(t_eval, callbacks=[callback],initial_soc=1)
     #solution = sim.solve(t_eval,initial_soc=0.7)
     solutions[index] = solution
 
@@ -65,22 +68,17 @@ colors = [
     (253/255.0, 146/255.0, 42/255.0) ,
     (32/255.0, 199/255.0, 224/255.0),
 ]
-
-plt.figure(figsize=(10, 8), dpi=100)
-ax = plt.gca()  # 获取当前坐标轴
+plt.figure(figsize=(23, 8), dpi=200)  # 调整图形大小
+gs = gridspec.GridSpec(1, 3, width_ratios=[3, 3, 0.3] , wspace=0.15)  # 主图:温度图:RMSE区域=1:1:0.3
+# 主图（放电容量-电压）
+ax1 = plt.subplot(gs[0])
 text_y_positions = []
 i = 0
 for index in list_opm:
-    if "hppc" in index:
-        dcap = solutions[index]["Time [s]"].entries
-        voltage = solutions[index]["Terminal voltage [V]"].entries
-        dcap1 = Data_real[index]["Time [s]"]
-        voltage1 = Data_real[index]["Terminal voltage [V]"]
-    else:
-        dcap = np.abs(solutions[index]["Discharge capacity [A.h]"].data)
-        voltage = solutions[index]["Battery voltage [V]"].data
-        dcap1 = np.abs(Data[index]["Capacity [A.h]"])
-        voltage1 = Data[index]["Terminal voltage [V]"]
+    dcap = np.abs(solutions[index]["Discharge capacity [A.h]"].data)
+    voltage = solutions[index]["Battery voltage [V]"].data
+    dcap1 = np.abs(Data[index]["Capacity [A.h]"])
+    voltage1 = Data[index]["Terminal voltage [V]"]
     #RMSE计算
     voltage_interp = np.array([])
     voltage1_interp = np.array([])
@@ -93,29 +91,85 @@ for index in list_opm:
     label0 = index + "_PyBaMM"
     label1 = index + "_real"
     dcap = dcap
-    plt.plot(dcap, voltage, linewidth=1.8, label=label0, color=colors[i])
+    ax1.plot(dcap, voltage, linewidth=1.8, label=label0, color=colors[i])
     indices = range(0, len(dcap1))  # 每隔10个点的索引
     dcap1 = dcap1
-    plt.scatter(dcap1[::50], voltage1[::50],label=label1, color=colors[i], s=20)
+    ax1.scatter(dcap1[::50], voltage1[::50],label=label1, color=colors[i], s=20)
     # 在右侧显示RMSE
     # 获取当前y轴范围
-    ymin, ymax = ax.get_ylim()
+    ymin, ymax = ax1.get_ylim()
     # 计算文本的y位置（均匀分布）
     text_y_pos = ymax - (ymax - ymin) * 0.07 * (list_opm.index(index) + 1)
     text_y_positions.append(text_y_pos)
-    # 在右侧添加RMSE文本
-    plt.text(ax.get_xlim()[1] * 1.02,  # x坐标：稍微超出右边界
-             text_y_pos,
+    i= i+1
+ax1.tick_params(axis="both", which="major", direction="in", width=1.5, length=5)  #设置主副刻度大小
+ax1.tick_params(axis="both", which="minor", direction="in", width=1.5, length=3)
+ax1.minorticks_on()  #显示副标题
+ax1.set_xlabel("Discharge Capacity [A.h]", fontsize=24, fontproperties="Times New Roman")
+ax1.set_ylabel("Cell Voltage [V]", fontsize=24, fontproperties="Times New Roman")
+ax1.tick_params(axis='x', labelsize=20)
+ax1.tick_params(axis='y', labelsize=20)
+
+
+ax2 = plt.subplot(gs[1])
+i = 0
+for index in list_opm:
+    # 假设温度数据在solutions和Data中有对应的字段
+    dcap = np.abs(solutions[index]["Discharge capacity [A.h]"].data)
+    temp = solutions[index]["Cell temperature [K]"].data[0, :] - 273.15 # 转换为摄氏度
+    dcap1 = np.abs(Data[index]["Capacity [A.h]"])
+    temp1 = Data[index]["Temperature1 [oC]"]  # 假设原始数据已经是摄氏度
+
+    ax2.plot(dcap, temp, linewidth=1.8, color=colors[list_opm.index(index)])
+    ax2.scatter(dcap1[::50], temp1[::50], color=colors[list_opm.index(index)], s=20)
+
+ax2.set_xlabel("Discharge Capacity [A.h]", fontsize=20, fontproperties="Times New Roman")
+ax2.set_ylabel("Temperature [°C]", fontsize=20, fontproperties="Times New Roman")
+ax2.tick_params(axis='both', labelsize=16)
+ax2.tick_params(axis="both", which="major", direction="in", width=1.5, length=5)
+ax2.tick_params(axis="both", which="minor", direction="in", width=1.5, length=3)
+ax2.minorticks_on()
+
+ax3 = plt.subplot(gs[2])
+ax3.axis('off')  # 关闭坐标轴
+
+num_items = len(list_opm)
+rmse_text_height = 0.1  # 每个RMSE文本占用的垂直空间
+total_rmse_space = num_items * rmse_text_height
+legend_space = 0.3  # 为图例保留的空间
+# 添加RMSE文本（左对齐）
+for idx, index in enumerate(list_opm):
+    dcap = np.abs(solutions[index]["Discharge capacity [A.h]"].data)
+    voltage = solutions[index]["Battery voltage [V]"].data
+    dcap1 = np.abs(Data[index]["Capacity [A.h]"])
+    voltage1 = Data[index]["Terminal voltage [V]"]
+
+    interp = np.linspace(np.min(dcap1), np.max(dcap1), 2000)
+    voltage_interp = np.interp(interp, dcap, voltage)
+    voltage1_interp = np.interp(interp, dcap1, voltage1)
+    rmse = np.sqrt(np.mean((voltage1_interp - voltage_interp) ** 2)) * 1000
+
+    # 从顶部开始排列RMSE文本
+    ax3.text(0.005, 0.95 - idx * 0.08,  # 调整垂直间距为0.08
              f"{index} RMSE: {rmse:.3f} mV",
-             fontdict={'family': 'Times New Roman', 'size': 16},
+             fontdict={'family': 'Times New Roman', 'size': 14},
              color='black',
-             verticalalignment='center')
-    i = i+1
-plt.tick_params(axis="both", which="major", direction="in", width=1.5, length=5)  #设置主副刻度大小
-plt.tick_params(axis="both", which="minor", direction="in", width=1.5, length=3)
-plt.minorticks_on()  #显示副标题
+             transform=ax3.transAxes,
+             horizontalalignment='left')
 
+# 添加图例（放在RMSE文本下方）
+handles, labels = ax1.get_legend_handles_labels()
+ax3.legend(handles, labels,
+           fontsize=12,
+           frameon=False,
+           prop={'family': 'Times New Roman', 'size': 14},
+           loc='upper left',
+           bbox_to_anchor=(0.005, 0.95 - num_items * 0.08 - 0.25),  # 在RMSE文本下方
+           borderaxespad=0.05)
 
+# 调整子图间距
+plt.subplots_adjust(wspace=0.1)
+"""
 #添加图例
 if text_y_positions:
     lowest_text_y = min(text_y_positions)
@@ -141,8 +195,20 @@ plt.xlabel("Discharge Capacity [A.h]", fontsize=24, fontproperties="Times New Ro
 plt.ylabel("Cell Voltage [V]", fontsize=24, fontproperties="Times New Roman")
 plt.tick_params(axis='x', labelsize=20)
 plt.tick_params(axis='y', labelsize=20)
+"""
 picture_path = "A:/Code/Cloud/Data/Cycle_0/solution"
 plt.savefig(os.path.join(picture_path,f"{current_time}_Cap_V.png"), dpi=300, bbox_inches='tight')
 #1
 end_time = time.time()
 print(f"Time cost: {end_time - start_time}s")
+
+# 在右侧添加RMSE文本
+"""
+plt.text(ax.get_xlim()[1] * 1.02,  # x坐标：稍微超出右边界
+         text_y_pos,
+         f"{index} RMSE: {rmse:.3f} mV",
+         fontdict={'family': 'Times New Roman', 'size': 16},
+         color='black',
+         verticalalignment='center')
+i = i + 1
+"""

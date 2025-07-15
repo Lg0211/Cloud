@@ -190,7 +190,6 @@ def Negative_electrode_OCP(sto):
     interp = pybamm.Interpolant(sto_data, OCP_entropic_change_data, sto,interpolator="cubic",extrapolate = True)
     return interp
 
-
 def Positive_electrode_OCP(sto):
 
     docpdt = (((0.4 - sto) * 0.2e-3) * (sto <= 0.4)
@@ -276,8 +275,8 @@ def get_parameter_values():
         "Positive current collector specific heat capacity [J.kg-1.K-1]": 1100.0, #EVE
         "Negative electrode density [kg.m-3]": 2.24e3,  #measure
         "Positive electrode density [kg.m-3]": 4.8e3,   #measure
-        "Negative electrode specific heat capacity [J.kg-1.K-1]": 1100, #EVE
-        "Positive electrode specific heat capacity [J.kg-1.K-1]": 1100, #EVE
+        "Negative electrode specific heat capacity [J.kg-1.K-1]": 4000, #EVE
+        "Positive electrode specific heat capacity [J.kg-1.K-1]": 4000, #EVE
         "Separator density [kg.m-3]": 2124.5, #measure
         "Separator specific heat capacity [J.kg-1.K-1]": 1100, #EVE
         #SEI#note待修正
