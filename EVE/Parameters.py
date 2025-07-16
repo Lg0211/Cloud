@@ -199,7 +199,67 @@ def Positive_electrode_OCP(sto):
               )
 
     return docpdt
+#%%
+def plating_exchange_current_density_OKane2020(c_e, c_Li, T):
+    """
+    Exchange-current density for Li plating reaction [A.m-2].
+    References
+    ----------
+    .. [1] O’Kane, Simon EJ, Ian D. Campbell, Mohamed WJ Marzook, Gregory J. Offer, and
+    Monica Marinescu. "Physical origin of the differential voltage minimum associated
+    with lithium plating in Li-ion batteries." Journal of The Electrochemical Society
+    167, no. 9 (2020): 090540.
+    Parameters
+    ----------
+    c_e : :class:`pybamm.Symbol`
+        Electrolyte concentration [mol.m-3]
+    c_Li : :class:`pybamm.Symbol`
+        Plated lithium concentration [mol.m-3]
+    T : :class:`pybamm.Symbol`
+        Temperature [K]
+    Returns
+    -------
+    :class:`pybamm.Symbol`
+        Exchange-current density [A.m-2]
+    """
 
+    k_plating = pybamm.Parameter("Lithium plating kinetic rate constant [m.s-1]")
+
+    return pybamm.constants.F * k_plating * c_e
+
+
+def stripping_exchange_current_density_OKane2020(c_e, c_Li, T):
+    """
+    Exchange-current density for Li stripping reaction [A.m-2].
+
+    References
+    ----------
+
+    .. [1] O’Kane, Simon EJ, Ian D. Campbell, Mohamed WJ Marzook, Gregory J. Offer, and
+    Monica Marinescu. "Physical origin of the differential voltage minimum associated
+    with lithium plating in Li-ion batteries." Journal of The Electrochemical Society
+    167, no. 9 (2020): 090540.
+
+    Parameters
+    ----------
+
+    c_e : :class:`pybamm.Symbol`
+        Electrolyte concentration [mol.m-3]
+    c_Li : :class:`pybamm.Symbol`
+        Plated lithium concentration [mol.m-3]
+    T : :class:`pybamm.Symbol`
+        Temperature [K]
+
+    Returns
+    -------
+
+    :class:`pybamm.Symbol`
+        Exchange-current density [A.m-2]
+    """
+
+    k_plating = pybamm.Parameter("Lithium plating kinetic rate constant [m.s-1]")
+
+    return pybamm.constants.F * k_plating * c_Li
 
 #%%
 # Call dict via a function to avoid errors when editing in place
@@ -259,12 +319,12 @@ def get_parameter_values():
         "Lower voltage cut-off [V]": 2.5,
         "Upper voltage cut-off [V]": 4.2,
         "Open-circuit voltage at 0% SOC [V]": 2.8,#measure
-        "Open-circuit voltage at 100% SOC [V]": 4.18,#measure 4.18
+        "Open-circuit voltage at 100% SOC [V]": 4.163,#measure 4.18
         "Initial concentration in negative electrode [mol.m-3]": 31252.0 * (0.01462867 - 0.01 ) ,#note  31252.0 * 0.69000747  0.01422177   31252.0 * 0.8250747
         "Initial concentration in positive electrode [mol.m-3]": 49520.78 * (0.89252436 + 0.019),#note 36360 * 0.27824213   0.85907807
         "Initial temperature [K]": 298.15,  #%%
         #themal
-        "Total heat transfer coefficient [W.m-2.K-1]": 10,  #note 待修正
+        "Total heat transfer coefficient [W.m-2.K-1]": 20,  #note 待修正
         "Negative current collector conductivity [S.m-1]": 58411000.0,
         "Positive current collector conductivity [S.m-1]": 36914000.0,
         "Cell volume [m3]": 3.487E-4, #规格书计算结果
@@ -275,8 +335,8 @@ def get_parameter_values():
         "Positive current collector specific heat capacity [J.kg-1.K-1]": 1100.0, #EVE
         "Negative electrode density [kg.m-3]": 2.24e3,  #measure
         "Positive electrode density [kg.m-3]": 4.8e3,   #measure
-        "Negative electrode specific heat capacity [J.kg-1.K-1]": 4000, #EVE
-        "Positive electrode specific heat capacity [J.kg-1.K-1]": 4000, #EVE
+        "Negative electrode specific heat capacity [J.kg-1.K-1]": 3000, #EVE
+        "Positive electrode specific heat capacity [J.kg-1.K-1]": 3000, #EVE
         "Separator density [kg.m-3]": 2124.5, #measure
         "Separator specific heat capacity [J.kg-1.K-1]": 1100, #EVE
         #SEI#note待修正
@@ -284,4 +344,14 @@ def get_parameter_values():
         "SEI partial molar volume [m3.mol-1]": 9.585e-05,
         "SEI resistivity [Ohm.m]": 1 / (5e-6),
         "Initial SEI thickness [m]": 5e-09,  #待修正
+        #Li plating
+        "Lithium metal partial molar volume [m3.mol-1]": 1.3e-05,
+        "Lithium plating kinetic rate constant [m.s-1]": 1e-09,
+        "Exchange-current density for plating [A.m-2]"
+        "": plating_exchange_current_density_OKane2020,
+        "Exchange-current density for stripping [A.m-2]"
+        "": stripping_exchange_current_density_OKane2020,
+        "Initial plated lithium concentration [mol.m-3]": 0.0,
+        "Typical plated lithium concentration [mol.m-3]": 1000.0,
+        "Lithium plating transfer coefficient": 0.65,
     }

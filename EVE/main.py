@@ -23,23 +23,24 @@ Data = {
     "0.33C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.33C_CHG"),
     "0.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="0.5C_CHG"),
     "1C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1C_CHG"),
-    "1.5C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="1.5C_CHG"),
     "2C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="2C_CHG"),
+    "3C_CHG": pd.read_excel("A:/Code/Cloud/Data/Cycle_0/倍率充放电测试.xlsx",sheet_name="3C_CHG"),
 }
-list = ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG","2C_CHG","0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
-time_stop = [12000 , 8000 , 3800 , 2600 , 2000, 12000, 8000, 3800]
-time_num = [1200 ,  800, 380 , 260 , 200, 1200, 800 , 380]
+list =      ["0.33C_CHG","0.5C_CHG","1C_CHG","1.5C_CHG","2C_CHG","3C_CHG","0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
+time_stop = [ 12000 ,     8000 ,     3800 ,   2600 ,     2000,    1400,    12000,       8000,       3800]
+time_num =  [ 1200 ,      800,       380 ,    260 ,      200,     700 ,    1200,        800 ,       380]
 dict = {
     item: {"time_stop": stop, "time_num": num}
     for item, stop, num in zip(list, time_stop, time_num)
 }
-list_opm  = ["0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
-
+#list_opm  = ["0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
+list_opm  = ["0.33C_CHG","0.5C_CHG","1C_CHG","2C_CHG","3C_CHG"]
 #%%
 model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
                                           "SEI": "constant",  # 使用恒定SEI层厚度
                                           "SEI film resistance": "average",  # 启用SEI膜电阻
                                           "SEI porosity change": "false",  # 禁用由于SEI导致的孔隙度变化
+                                          "lithium plating" :"reversible" #可逆析锂
                                           })
 
 parameter_values = pybamm.ParameterValues(Parameters.get_parameter_values())
@@ -56,7 +57,8 @@ for index in list_opm:
         print(f"当前时间: {sol.t[-1]}, 最大插值使用: {sol.all_interpolants_used}")
         return False  # 不终止求解
 
-    solution = sim.solve(t_eval, callbacks=[callback],initial_soc=1)
+    #solution = sim.solve(t_eval, callbacks=[callback],initial_soc=1)
+    solution = sim.solve(t_eval, callbacks=[callback])
     #solution = sim.solve(t_eval,initial_soc=0.7)
     solutions[index] = solution
 
@@ -67,6 +69,7 @@ colors = [
     (190/255.0, 32/255.0, 2/255.0),
     (253/255.0, 146/255.0, 42/255.0) ,
     (32/255.0, 199/255.0, 224/255.0),
+    (154/255.0, 96/255.0, 180/255.0),
 ]
 plt.figure(figsize=(23, 8), dpi=200)  # 调整图形大小
 gs = gridspec.GridSpec(1, 3, width_ratios=[3, 3, 0.3] , wspace=0.15)  # 主图:温度图:RMSE区域=1:1:0.3
@@ -94,7 +97,7 @@ for index in list_opm:
     ax1.plot(dcap, voltage, linewidth=1.8, label=label0, color=colors[i])
     indices = range(0, len(dcap1))  # 每隔10个点的索引
     dcap1 = dcap1
-    ax1.scatter(dcap1[::50], voltage1[::50],label=label1, color=colors[i], s=20)
+    ax1.scatter(dcap1[::30], voltage1[::30],label=label1, color=colors[list_opm.index(index)],facecolors='none', edgecolors=colors[list_opm.index(index)],s=20)
     # 在右侧显示RMSE
     # 获取当前y轴范围
     ymin, ymax = ax1.get_ylim()
@@ -110,7 +113,6 @@ ax1.set_ylabel("Cell Voltage [V]", fontsize=24, fontproperties="Times New Roman"
 ax1.tick_params(axis='x', labelsize=20)
 ax1.tick_params(axis='y', labelsize=20)
 
-
 ax2 = plt.subplot(gs[1])
 i = 0
 for index in list_opm:
@@ -121,7 +123,7 @@ for index in list_opm:
     temp1 = Data[index]["Temperature1 [oC]"]  # 假设原始数据已经是摄氏度
 
     ax2.plot(dcap, temp, linewidth=1.8, color=colors[list_opm.index(index)])
-    ax2.scatter(dcap1[::50], temp1[::50], color=colors[list_opm.index(index)], s=20)
+    ax2.scatter(dcap1[::50], temp1[::50], color=colors[list_opm.index(index)],facecolors='none', edgecolors=colors[list_opm.index(index)],s=20)
 
 ax2.set_xlabel("Discharge Capacity [A.h]", fontsize=20, fontproperties="Times New Roman")
 ax2.set_ylabel("Temperature [°C]", fontsize=20, fontproperties="Times New Roman")
@@ -164,7 +166,7 @@ ax3.legend(handles, labels,
            frameon=False,
            prop={'family': 'Times New Roman', 'size': 14},
            loc='upper left',
-           bbox_to_anchor=(0.005, 0.95 - num_items * 0.08 - 0.25),  # 在RMSE文本下方
+           bbox_to_anchor=(0.005, 0.95 - num_items * 0.08),  # 在RMSE文本下方
            borderaxespad=0.05)
 
 # 调整子图间距
