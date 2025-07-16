@@ -29,7 +29,7 @@ dict = {
     for item, stop, num in zip(list, time_stop, time_num)
 }
 #list_opm  = ["0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
-list_opm_DCHG  = ["0.33C_DCHG"]
+list_opm_DCHG  = ["0.33C_DCHG","0.5C_DCHG","1C_DCHG"]
 list_opm_CHG  = ["0.33C_CHG","0.5C_CHG","1C_CHG","2C_CHG","3C_CHG"]
 #%%
 model = pybamm.lithium_ion.DFN(options = {"thermal": "lumped",
@@ -47,9 +47,9 @@ for index in list_opm_DCHG:
     solver = pybamm.CasadiSolver(mode="safe", atol=1e-6, rtol=1e-3)
     sim = pybamm.Simulation(model, parameter_values=parameter_values, solver=solver)
     t_eval = np.linspace(0, dict[index]["time_stop"], dict[index]["time_num"])
-    solution = sim.solve(t_eval,initial_soc=0.98)
+    solution = sim.solve(t_eval,initial_soc=1)
     solutions[index] = solution
-loss_plot(solutions, list_opm_DCHG, Data, current_time)
+loss_plot(solutions, list_opm_DCHG, Data, current_time,"DCHG")
 
 for index in list_opm_CHG:
     parameter_values["Current function [A]"] =  - Data[index]["Current [A]"][0] #Data[index]["Current [A]"][0]
@@ -58,4 +58,4 @@ for index in list_opm_CHG:
     t_eval = np.linspace(0, dict[index]["time_stop"], dict[index]["time_num"])
     solution = sim.solve(t_eval)
     solutions[index] = solution
-loss_plot(solutions,list_opm_CHG, Data, current_time)
+loss_plot(solutions,list_opm_CHG, Data,current_time, "CHG")

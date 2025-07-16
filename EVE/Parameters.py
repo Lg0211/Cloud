@@ -159,7 +159,7 @@ def NMC_electrode_diffusivity(sto, T):
     D_s_p_ref = 3.5e-15* 5 #-14 - -15
     R = 8.314472
     D_s_p = D_s_p_ref * np.exp(3e4 / R * (1 / 298.15 - 1 / T)) #降低扩散
-    return D_s_p * 0.99999 * 5
+    return D_s_p * 0.99999 * 10
 
 
 def graphite_electrode_diffusivity(sto, T):
@@ -319,7 +319,7 @@ def get_parameter_values():
         "Lower voltage cut-off [V]": 2.5,
         "Upper voltage cut-off [V]": 4.2,
         "Open-circuit voltage at 0% SOC [V]": 2.8,#measure
-        "Open-circuit voltage at 100% SOC [V]": 4.192,#measure 4.18
+        "Open-circuit voltage at 100% SOC [V]": 4.25,#measure 4.18
         "Initial concentration in negative electrode [mol.m-3]": 31252.0 * (0.01462867 - 0.01 ) ,#note  31252.0 * 0.69000747  0.01422177   31252.0 * 0.8250747
         "Initial concentration in positive electrode [mol.m-3]": 49520.78 * (0.89252436 + 0.019),#note 36360 * 0.27824213   0.85907807
         "Initial temperature [K]": 298.15,  #%%

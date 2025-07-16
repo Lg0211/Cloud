@@ -12,7 +12,7 @@ colors = [
     (154/255.0, 96/255.0, 180/255.0),
 ]
 def loss_plot(
-        solutions , list_opm , Data , current_time
+        solutions , list_opm , Data , current_time ,name
 ):
     plt.figure(figsize=(23, 8), dpi=400)  # 调整图形大小
     gs = gridspec.GridSpec(1, 3, width_ratios=[3, 3, 0.3] , wspace=0.15)  # 主图:温度图:RMSE区域=1:1:0.3
@@ -114,4 +114,4 @@ def loss_plot(
     # 调整子图间距
     plt.subplots_adjust(wspace=0.1)
     picture_path = "A:/Code/Cloud/Data/Cycle_0/solution"
-    plt.savefig(os.path.join(picture_path,f"{current_time}_Cap_V.png"), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(picture_path,f"{current_time}_Cap_V_{name}.png"), dpi=300, bbox_inches='tight')
