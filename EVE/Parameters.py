@@ -119,7 +119,7 @@ def nmc_ocp2(sto):  #change OCP
 
 def nmc_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
     i0_ref_p = 1.5
-    E_r = 5000
+    E_r = 2000
     c_e_ref = 1000
     c_s_ref = c_s_max / 2
 
@@ -129,9 +129,9 @@ def nmc_electrolyte_exchange_current_density(c_e, c_s_surf, c_s_max, T):
             * (c_s_surf / c_s_ref) ** 0.5
             * ((c_s_max - c_s_surf) / (c_s_max - c_s_ref)) ** 0.5
             * (c_e / c_e_ref) ** 0.5
-
             ) * 0.99
-    return i0_p * 0.5
+
+    return i0_p * 0.5 * 1.25
 
 
 #%%
@@ -318,7 +318,7 @@ def get_parameter_values():
         "Number of cells connected in series to make a battery": 1.0,#measure
         "Lower voltage cut-off [V]": 2.5,
         "Upper voltage cut-off [V]": 4.2,
-        "Open-circuit voltage at 0% SOC [V]": 2.8,#measure
+        "Open-circuit voltage at 0% SOC [V]": 2.5,#measure
         "Open-circuit voltage at 100% SOC [V]": 4.25,#measure 4.18
         "Initial concentration in negative electrode [mol.m-3]": 31252.0 * (0.01462867 - 0.01 ) ,#note  31252.0 * 0.69000747  0.01422177   31252.0 * 0.8250747
         "Initial concentration in positive electrode [mol.m-3]": 49520.78 * (0.89252436 + 0.019),#note 36360 * 0.27824213   0.85907807

@@ -47,7 +47,7 @@ for index in list_opm_DCHG:
     solver = pybamm.CasadiSolver(mode="safe", atol=1e-6, rtol=1e-3)
     sim = pybamm.Simulation(model, parameter_values=parameter_values, solver=solver)
     t_eval = np.linspace(0, dict[index]["time_stop"], dict[index]["time_num"])
-    solution = sim.solve(t_eval,initial_soc=1)
+    solution = sim.solve(t_eval,initial_soc=0.95)
     solutions[index] = solution
 loss_plot(solutions, list_opm_DCHG, Data, current_time,"DCHG")
 
